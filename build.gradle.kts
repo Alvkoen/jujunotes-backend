@@ -1,3 +1,5 @@
+import dev.monosoul.jooq.RecommendedVersions
+
 val ktor_version: String by project
 val kotlin_version: String by project
 val logback_version: String by project
@@ -6,6 +8,7 @@ plugins {
 	kotlin("jvm") version "1.8.0"
 	id("io.ktor.plugin") version "2.2.2"
 	id("org.jetbrains.kotlin.plugin.serialization") version "1.8.0"
+	id("dev.monosoul.jooq-docker") version "3.0.0"
 }
 
 group = "com.alvkoen"
@@ -21,12 +24,27 @@ repositories {
 	mavenCentral()
 }
 
+jooq {
+	withoutContainer {
+		db {
+			username = "postgres"
+			password = "postgres"
+			name = "postgres"
+			host = "localhost"
+			port = 5432
+		}
+	}
+}
+
 dependencies {
 	implementation("io.ktor:ktor-server-core-jvm:$ktor_version")
 	implementation("io.ktor:ktor-server-netty-jvm:$ktor_version")
 	implementation("io.ktor:ktor-server-content-negotiation:$ktor_version")
 	implementation("ch.qos.logback:logback-classic:$logback_version")
 	implementation("io.ktor:ktor-serialization-gson:$ktor_version")
+	jooqCodegen("org.postgresql:postgresql:42.3.8")
+	implementation("org.jooq:jooq:${RecommendedVersions.JOOQ_VERSION}")
+	implementation("org.flywaydb:flyway-core:${RecommendedVersions.FLYWAY_VERSION}")
 	testImplementation("io.ktor:ktor-server-tests-jvm:$ktor_version")
 	testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
 }
