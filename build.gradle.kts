@@ -25,12 +25,11 @@ repositories {
 }
 
 jooq {
-	withoutContainer {
+	withContainer {
 		db {
 			username = "postgres"
 			password = "postgres"
 			name = "postgres"
-			host = "localhost"
 			port = 5432
 		}
 	}
