@@ -1,6 +1,9 @@
 package com.alvkoen.routes
 
+import com.alvkoen.model.ActivityListResult
+import com.alvkoen.model.ActivityResult
 import com.alvkoen.model.Template
+import com.alvkoen.service.ActivitiesService
 import com.google.gson.Gson
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
@@ -12,29 +15,68 @@ import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
+import java.util.*
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
-fun Route.templateRouting() {
+fun Route.templateRouting(activitiesService: ActivitiesService) {
+	val logger: Logger = LoggerFactory.getLogger("TemplateRouting")
+
 	route("/templates") {
+		//	todo will take care of user id later when there's authorisation in place
 		get {
-//	todo will take care of user id later when there's authorisation in place
-			call.respond(HttpStatusCode.OK)
+			when (val result = activitiesService.getTemplates()) {
+				is ActivityListResult.Success<Template> -> {
+					call.respond(HttpStatusCode.OK, result.values)
+				}
+				is ActivityListResult.Failure -> {
+					logger.error(result.reason, result.exception)
+					call.respond(HttpStatusCode.InternalServerError, result.reason)
+				}
+			}
 		}
 		get("{id?}") {
 			val id = call.parameters["id"] ?: return@get call.respondText(
 				"Missing id",
 				status = HttpStatusCode.BadRequest
 			)
-			call.respond(HttpStatusCode.OK)
+
+			when (val result = activitiesService.getTemplateById(UUID.fromString(id))) {
+				is  ActivityResult.Success<Template> -> {
+					//todo check if not found
+					call.respond(HttpStatusCode.OK, result.value)
+				}
+				is ActivityResult.Failure -> {
+					logger.error(result.reason, result.exception)
+					call.respond(HttpStatusCode.InternalServerError, result.reason)
+				}
+			}
 		}
 		post {
 			val template = Gson().fromJson(call.receiveText(), Template::class.java)
 
-			call.respond(HttpStatusCode.OK)
+			when (val result = activitiesService.addTemplate(template)) {
+				is ActivityResult.Success<Template> -> {
+					call.respond(HttpStatusCode.Created, result.value)
+				}
+				is ActivityResult.Failure -> {
+					logger.error(result.reason, result.exception)
+					call.respond(HttpStatusCode.InternalServerError, result.reason)
+				}
+			}
 		}
 		delete("{id?}") {
 			val id = call.parameters["id"] ?: return@delete call.respond(HttpStatusCode.BadRequest)
 
-			call.respond(HttpStatusCode.OK)
+			when (val result = activitiesService.deleteTemplate(UUID.fromString(id))) {
+				is ActivityResult.Success<Template> -> {
+					call.respond(HttpStatusCode.Created, result.value)
+				}
+				is ActivityResult.Failure -> {
+					logger.error(result.reason, result.exception)
+					call.respond(HttpStatusCode.InternalServerError, result.reason)
+				}
+			}
 		}
 	}
 }

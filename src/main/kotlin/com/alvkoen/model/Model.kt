@@ -3,6 +3,15 @@ package com.alvkoen.model
 import java.time.LocalDateTime
 import java.util.UUID
 
+sealed class ActivityResult<out T> {
+	data class Success<T>(val value: T) : ActivityResult<T>()
+	data class Failure(val reason: String, val exception: Exception? = null) : ActivityResult<Nothing>()
+}
+sealed class ActivityListResult<out T> {
+	data class Success<T>(val values: List<T>) : ActivityListResult<T>()
+	data class Failure(val reason: String, val exception: Exception? = null) : ActivityListResult<Nothing>()
+}
+
 data class Set (
 	val id: UUID,
 	val name: String,
@@ -19,16 +28,16 @@ data class Exercise (
 	val isSuperSet: Boolean
 )
 
-data class Workout(
-	val id: UUID,
-	val name: String,
-	val date: LocalDateTime,
-	val exercises: List<Exercise>,
-	val isCompleted: Boolean
+open class Template(
+	open val id: UUID,
+	open val name: String,
+	open val exercises: List<Exercise>,
 )
 
-data class Template (
-	val id: UUID,
-	val name: String,
-	val exercises: List<Exercise>
-)
+class Workout(
+	override val id: UUID,
+	override val name: String,
+	override val exercises: List<Exercise>,
+	val date: LocalDateTime,
+	val isCompleted: Boolean
+) : Template(id, name, exercises)

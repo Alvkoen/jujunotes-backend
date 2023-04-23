@@ -15,7 +15,7 @@ create table exercise
 (
     id             uuid    not null default uuid_generate_v4(),
     name           varchar not null,
-    exercise_order bigint  not null,
+    exercise_order int  not null,
     parent_id      uuid    not null,
     is_superset    boolean not null default false,
     primary key (id)
