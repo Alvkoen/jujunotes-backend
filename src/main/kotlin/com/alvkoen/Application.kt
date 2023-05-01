@@ -12,10 +12,8 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.ktor.serialization.gson.gson
 import java.text.DateFormat
-import javax.sql.DataSource
-import org.jooq.DSLContext
-import org.jooq.SQLDialect
-import org.jooq.impl.DSL
+import org.flywaydb.core.Flyway
+import org.jetbrains.exposed.sql.Database
 
 fun main(args: Array<String>): Unit =
 	io.ktor.server.netty.EngineMain.main(args)
@@ -23,8 +21,37 @@ fun main(args: Array<String>): Unit =
 @Suppress("unused") // application.conf references the main function. This annotation prevents the IDE from marking it as unused.
 fun Application.module() {
 
-	val dslContext = configureDslContext()
-	val workoutsService = ActivitiesService(WorkoutRepository(dslContext), TemplateRepository(dslContext))
+//	install(ContentNegotiation) {
+//		json()
+//	}
+
+	// Configure Hikari connection pool
+	val hikariConfig = HikariConfig().apply {
+		jdbcUrl = "jdbc:postgresql://localhost:5432/jujudb"
+		driverClassName = "org.postgresql.Driver"
+		username = "postgres"
+		password = "postgres"
+		maximumPoolSize = 3
+	}
+	val dataSource = HikariDataSource(hikariConfig)
+
+	// Configure Flyway
+	val flyway = Flyway.configure()
+		.dataSource(dataSource)
+		.locations("classpath:db/migration")
+		.load()
+
+	// Run migrations
+	flyway.migrate()
+
+	// Set up Exposed
+	Database.connect(dataSource)
+
+
+
+	val workoutsService = ActivitiesService(WorkoutRepository(), TemplateRepository())
+
+
 
 	configureRouting(workoutsService)
 
@@ -33,23 +60,5 @@ fun Application.module() {
 			setDateFormat(DateFormat.LONG)
 			setPrettyPrinting()
 		}
-	}
-}
-
-fun configureDslContext(): DSLContext {
-	val config = HikariConfig()
-	config.jdbcUrl = "jdbc:postgres://localhost:3306/juju"
-	config.username = "test"
-	config.password = "test"
-	val dataSource = HikariDataSource(config)
-
-	// Create the JooqConfig object and DSLContext
-	val jooqConfig = JooqConfig(dataSource)
-	return jooqConfig.dslContext()
-}
-
-class JooqConfig(private val dataSource: DataSource) {
-	fun dslContext(): DSLContext {
-		return DSL.using(dataSource, SQLDialect.POSTGRES)
 	}
 }

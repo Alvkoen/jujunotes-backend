@@ -7,6 +7,7 @@ create table set
     name        varchar not null,
     reps        bigint  not null,
     weight      bigint  not null,
+    "order"     int     not null,
     exercise_id uuid    not null,
     primary key (id)
 );
@@ -40,12 +41,3 @@ create table template
 alter table set
     add constraint set_exercise_id_fk
         foreign key (exercise_id) references exercise;
-
-
-alter table exercise
-    add constraint exercise_workout_id_fk
-        foreign key (parent_id) references workout;
-
-alter table exercise
-    add constraint exercise_template_id_fk
-        foreign key (parent_id) references template;

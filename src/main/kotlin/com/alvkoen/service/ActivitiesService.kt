@@ -8,7 +8,7 @@ import com.alvkoen.model.Template
 import com.alvkoen.model.Workout
 import java.util.*
 
-class ActivitiesService(private val workoutRepository: WorkoutRepository, val templateRepository: TemplateRepository) {
+class ActivitiesService(private val workoutRepository: WorkoutRepository, private val templateRepository: TemplateRepository) {
 
 	fun getWorkouts(): ActivityListResult<Workout> {
 		return try {
@@ -18,7 +18,7 @@ class ActivitiesService(private val workoutRepository: WorkoutRepository, val te
 		}
 	}
 
-	fun getWorkoutById(id: UUID): ActivityResult<Workout> {
+	fun getWorkoutById(id: UUID): ActivityResult<Workout?> {
 		return try {
 			ActivityResult.Success(workoutRepository.getById(id))
 		} catch (e: Exception) {
@@ -26,19 +26,17 @@ class ActivitiesService(private val workoutRepository: WorkoutRepository, val te
 		}
 	}
 
-	fun addWorkout(workout: Workout): ActivityResult<Workout> {
+	fun addWorkout(workout: Workout): ActivityResult<UUID> {
 		return try {
-			val savedWorkout = workoutRepository.addWorkout(workout)
-			ActivityResult.Success(savedWorkout)
+			ActivityResult.Success(workoutRepository.addWorkout(workout))
 		} catch (e: Exception) {
 			ActivityResult.Failure("Failed to save workout", e)
 		}
 	}
 
-	fun deleteWorkout(id: UUID): ActivityResult<Workout> {
+	fun deleteWorkout(id: UUID): ActivityResult<Boolean> {
 		return try {
-			val deletedWorkout = workoutRepository.deleteWorkout(id)
-			ActivityResult.Success(deletedWorkout)
+			ActivityResult.Success(workoutRepository.deleteWorkout(id))
 		} catch (e: Exception) {
 			ActivityResult.Failure("Failed to delete workout", e)
 		}
@@ -52,27 +50,25 @@ class ActivitiesService(private val workoutRepository: WorkoutRepository, val te
 		}
 	}
 
-	fun getTemplateById(id: UUID): ActivityResult<Template> {
+	fun getTemplateById(id: UUID): ActivityResult<Template?> {
 		return try {
-			ActivityResult.Success(templateRepository.getById(id))
+			ActivityResult.Success(templateRepository.getTemplateById(id))
 		} catch (e: Exception) {
 			ActivityResult.Failure("Failed to get template", e)
 		}
 	}
 
-	fun addTemplate(template: Template): ActivityResult<Template> {
+	fun addTemplate(template: Template): ActivityResult<UUID> {
 		return try {
-			val savedTemplate = templateRepository.addTemplate(template)
-			ActivityResult.Success(savedTemplate)
+			ActivityResult.Success(templateRepository.addTemplate(template))
 		} catch (e: Exception) {
 			ActivityResult.Failure("Failed to save template", e)
 		}
 	}
 
-	fun deleteTemplate(id: UUID): ActivityResult<Template> {
+	fun deleteTemplate(id: UUID): ActivityResult<Boolean> {
 		return try {
-			val deletedTemplate = templateRepository.deleteTemplate(id)
-			ActivityResult.Success(deletedTemplate)
+			ActivityResult.Success(templateRepository.deleteTemplate(id))
 		} catch (e: Exception) {
 			ActivityResult.Failure("Failed to delete template", e)
 		}

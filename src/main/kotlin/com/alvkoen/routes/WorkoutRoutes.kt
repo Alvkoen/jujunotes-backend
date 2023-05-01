@@ -22,8 +22,8 @@ import org.slf4j.LoggerFactory
 fun Route.workoutRouting(activitiesService: ActivitiesService) {
 	val logger: Logger = LoggerFactory.getLogger("WorkoutRouting")
 
+	//	todo will take care of user id later when there's authorisation in place
 	route("/workouts") {
-		//	todo will take care of user id later when there's authorisation in place
 		get {
 			when (val result = activitiesService.getWorkouts()) {
 				is ActivityListResult.Success<Workout> -> {
@@ -42,9 +42,13 @@ fun Route.workoutRouting(activitiesService: ActivitiesService) {
 			)
 
 			when (val result = activitiesService.getWorkoutById(UUID.fromString(id))) {
-				is  ActivityResult.Success<Workout> -> {
-					//todo check if not found
-					call.respond(HttpStatusCode.OK, result.value)
+				is  ActivityResult.Success<*> -> {
+					val workout = result.value
+					if (workout != null) {
+						call.respond(HttpStatusCode.OK, workout)
+					} else {
+						call.respond(HttpStatusCode.NotFound, "Workout not found")
+					}
 				}
 				is ActivityResult.Failure -> {
 					logger.error(result.reason, result.exception)
@@ -56,7 +60,7 @@ fun Route.workoutRouting(activitiesService: ActivitiesService) {
 			val workout = Gson().fromJson(call.receiveText(), Workout::class.java)
 
 			when (val result = activitiesService.addWorkout(workout)) {
-				is ActivityResult.Success<Workout> -> {
+				is ActivityResult.Success<UUID> -> {
 					call.respond(HttpStatusCode.Created, result.value)
 				}
 				is ActivityResult.Failure -> {
@@ -69,7 +73,7 @@ fun Route.workoutRouting(activitiesService: ActivitiesService) {
 			val id = call.parameters["id"] ?: return@delete call.respond(HttpStatusCode.BadRequest)
 
 			when (val result = activitiesService.deleteWorkout(UUID.fromString(id))) {
-				is ActivityResult.Success<Workout> -> {
+				is ActivityResult.Success<Boolean> -> {
 					call.respond(HttpStatusCode.Created, result.value)
 				}
 				is ActivityResult.Failure -> {

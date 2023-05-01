@@ -7,12 +7,13 @@ sealed class ActivityResult<out T> {
 	data class Success<T>(val value: T) : ActivityResult<T>()
 	data class Failure(val reason: String, val exception: Exception? = null) : ActivityResult<Nothing>()
 }
+
 sealed class ActivityListResult<out T> {
 	data class Success<T>(val values: List<T>) : ActivityListResult<T>()
 	data class Failure(val reason: String, val exception: Exception? = null) : ActivityListResult<Nothing>()
 }
 
-data class Set (
+data class Set(
 	val id: UUID,
 	val name: String,
 	val reps: Int,
@@ -20,7 +21,7 @@ data class Set (
 	val order: Int
 )
 
-data class Exercise (
+data class Exercise(
 	val id: UUID,
 	val name: String,
 	val order: Int,
@@ -40,4 +41,14 @@ class Workout(
 	override val exercises: List<Exercise>,
 	val date: LocalDateTime,
 	val isCompleted: Boolean
-) : Template(id, name, exercises)
+) : Template(id, name, exercises) {
+	fun copy(
+		id: UUID = this.id,
+		name: String = this.name,
+		exercises: List<Exercise> = this.exercises,
+		date: LocalDateTime = this.date,
+		isCompleted: Boolean = this.isCompleted
+	): Workout {
+		return Workout(id, name, exercises, date, isCompleted)
+	}
+}

@@ -42,9 +42,13 @@ fun Route.templateRouting(activitiesService: ActivitiesService) {
 			)
 
 			when (val result = activitiesService.getTemplateById(UUID.fromString(id))) {
-				is  ActivityResult.Success<Template> -> {
-					//todo check if not found
-					call.respond(HttpStatusCode.OK, result.value)
+				is  ActivityResult.Success<*> -> {
+					val template = result.value
+					if (template != null) {
+						call.respond(HttpStatusCode.OK, template)
+					} else {
+						call.respond(HttpStatusCode.NotFound, "Template not found")
+					}
 				}
 				is ActivityResult.Failure -> {
 					logger.error(result.reason, result.exception)
@@ -56,7 +60,7 @@ fun Route.templateRouting(activitiesService: ActivitiesService) {
 			val template = Gson().fromJson(call.receiveText(), Template::class.java)
 
 			when (val result = activitiesService.addTemplate(template)) {
-				is ActivityResult.Success<Template> -> {
+				is ActivityResult.Success<UUID> -> {
 					call.respond(HttpStatusCode.Created, result.value)
 				}
 				is ActivityResult.Failure -> {
@@ -69,7 +73,7 @@ fun Route.templateRouting(activitiesService: ActivitiesService) {
 			val id = call.parameters["id"] ?: return@delete call.respond(HttpStatusCode.BadRequest)
 
 			when (val result = activitiesService.deleteTemplate(UUID.fromString(id))) {
-				is ActivityResult.Success<Template> -> {
+				is ActivityResult.Success<Boolean> -> {
 					call.respond(HttpStatusCode.Created, result.value)
 				}
 				is ActivityResult.Failure -> {
